@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TravelPlanner.Entities;
+using TravelPlanner.Services;
 
 namespace TravelPlanner.Controllers;
 
@@ -7,46 +8,114 @@ namespace TravelPlanner.Controllers;
 [Route("api/[controller]")]
 public class TripController : ControllerBase
 {
-    private readonly ILogger<TripController> _logger;
+    private readonly ITripService _tripService;
 
-    public TripController(ILogger<TripController> logger)
+    public TripController(ITripService tripService)
     {
-        _logger = logger;
+        _tripService = tripService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Trip>>> GetAllTrips()
+    public async Task<ActionResult<IEnumerable<Trip>>> GetAll()
     {
-        return Ok(new List<Trip>()); // TODO: Implement with service
+        var trips = await _tripService.GetAllAsync();
+        return Ok(trips);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Trip>> GetTripById(int id)
+    public async Task<ActionResult<Trip>> GetById(int id)
     {
-        return Ok(new Trip()); // TODO: Implement with service
-    }
-
-    [HttpGet("popular")]
-    public async Task<ActionResult<List<Trip>>> GetPopularTrips()
-    {
-        return Ok(new List<Trip>()); // TODO: Implement with service
+        var trip = await _tripService.GetByIdAsync(id);
+        if (trip == null)
+            return NotFound();
+        return Ok(trip);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Trip>> CreateTrip([FromBody] Trip trip)
+    public async Task<ActionResult<Trip>> Create(Trip trip)
     {
-        return CreatedAtAction(nameof(GetTripById), new { id = trip.Id }, trip); // TODO: Implement with service
+        var createdTrip = await _tripService.CreateAsync(trip);
+        return CreatedAtAction(nameof(GetById), new { id = createdTrip.Id }, createdTrip);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<Trip>> UpdateTrip(int id, [FromBody] Trip trip)
+    public async Task<ActionResult<Trip>> Update(int id, Trip trip)
     {
-        return Ok(trip); // TODO: Implement with service
+        var updatedTrip = await _tripService.UpdateAsync(id, trip);
+        return Ok(updatedTrip);
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteTrip(int id)
+    public async Task<ActionResult> Delete(int id)
     {
-        return NoContent(); // TODO: Implement with service
+        await _tripService.DeleteAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("popular")]
+    public async Task<ActionResult<IEnumerable<Trip>>> GetPopular([FromQuery] int count = 10)
+    {
+        var trips = await _tripService.GetPopularTripsAsync(count);
+        return Ok(trips);
+    }
+
+    [HttpPost("{id}/increment-popularity")]
+    public async Task<ActionResult> IncrementPopularity(int id)
+    {
+        await _tripService.IncrementPopularityAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("date-range")]
+    public async Task<ActionResult<IEnumerable<Trip>>> GetByDateRange(
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate)
+    {
+        var trips = await _tripService.GetTripsByDateRangeAsync(startDate, endDate);
+        return Ok(trips);
+    }
+
+    [HttpGet("price-range")]
+    public async Task<ActionResult<IEnumerable<Trip>>> GetByPriceRange(
+        [FromQuery] decimal minPrice,
+        [FromQuery] decimal maxPrice)
+    {
+        var trips = await _tripService.GetTripsByPriceRangeAsync(minPrice, maxPrice);
+        return Ok(trips);
+    }
+
+    [HttpGet("destination/{destinationId}")]
+    public async Task<ActionResult<IEnumerable<Trip>>> GetByDestination(int destinationId)
+    {
+        var trips = await _tripService.GetTripsByDestinationAsync(destinationId);
+        return Ok(trips);
+    }
+
+    [HttpGet("departure/{departureLocationId}")]
+    public async Task<ActionResult<IEnumerable<Trip>>> GetByDepartureLocation(int departureLocationId)
+    {
+        var trips = await _tripService.GetTripsByDepartureLocationAsync(departureLocationId);
+        return Ok(trips);
+    }
+
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<IEnumerable<Trip>>> GetByUser(int userId)
+    {
+        var trips = await _tripService.GetTripsByUserAsync(userId);
+        return Ok(trips);
+    }
+
+    [HttpGet("sorted/price")]
+    public async Task<ActionResult<IEnumerable<Trip>>> GetSortedByPrice([FromQuery] bool ascending = true)
+    {
+        var trips = await _tripService.GetTripsSortedByPriceAsync(ascending);
+        return Ok(trips);
+    }
+
+    [HttpGet("sorted/date")]
+    public async Task<ActionResult<IEnumerable<Trip>>> GetSortedByDate([FromQuery] bool ascending = true)
+    {
+        var trips = await _tripService.GetTripsSortedByDateAsync(ascending);
+        return Ok(trips);
     }
 } 
