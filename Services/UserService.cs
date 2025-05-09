@@ -104,4 +104,27 @@ public class UserService : BaseService<User>, IUserService
             .Where(t => t.UserId == userId && t.EndDate < currentDate)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<User>> GetSortedUsersAsync(string sortBy)
+    {
+        var users = await _context.Users
+            .Include(u => u.Trips)
+            .ToListAsync();
+
+        return sortBy.ToLower() switch
+        {
+            "username" => users.OrderBy(u => u.Username),
+            "email" => users.OrderBy(u => u.Email),
+            "tripcount" => users.OrderByDescending(u => u.Trips.Count),
+            _ => users
+        };
+    }
+
+    public override async Task<User> CreateAsync(User user)
+    {
+        user.Trips = new List<Trip>();
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+        return user;
+    }
 } 

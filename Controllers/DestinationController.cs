@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TravelPlanner.DTOs;
 using TravelPlanner.Entities;
 using TravelPlanner.Services;
 
@@ -16,33 +17,81 @@ public class DestinationController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Destination>>> GetAll()
+    public async Task<ActionResult<IEnumerable<DestinationResponseDTO>>> GetAll()
     {
         var destinations = await _destinationService.GetAllAsync();
-        return Ok(destinations);
+        var response = destinations.Select(d => new DestinationResponseDTO
+        {
+            Id = d.Id,
+            Name = d.Name,
+            Country = d.Country,
+            Description = d.Description,
+            TripCount = d.Trips?.Count ?? 0
+        });
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Destination>> GetById(int id)
+    public async Task<ActionResult<DestinationResponseDTO>> GetById(int id)
     {
         var destination = await _destinationService.GetByIdAsync(id);
         if (destination == null)
             return NotFound();
-        return Ok(destination);
+
+        var response = new DestinationResponseDTO
+        {
+            Id = destination.Id,
+            Name = destination.Name,
+            Country = destination.Country,
+            Description = destination.Description,
+            TripCount = destination.Trips?.Count ?? 0
+        };
+        return Ok(response);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Destination>> Create(Destination destination)
+    public async Task<ActionResult<DestinationResponseDTO>> Create(CreateDestinationDTO dto)
     {
+        var destination = new Destination
+        {
+            Name = dto.Name,
+            Country = dto.Country,
+            Description = dto.Description
+        };
+
         var createdDestination = await _destinationService.CreateAsync(destination);
-        return CreatedAtAction(nameof(GetById), new { id = createdDestination.Id }, createdDestination);
+        var response = new DestinationResponseDTO
+        {
+            Id = createdDestination.Id,
+            Name = createdDestination.Name,
+            Country = createdDestination.Country,
+            Description = createdDestination.Description,
+            TripCount = 0
+        };
+        return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<Destination>> Update(int id, Destination destination)
+    public async Task<ActionResult<DestinationResponseDTO>> Update(int id, UpdateDestinationDTO dto)
     {
+        var destination = new Destination
+        {
+            Id = id,
+            Name = dto.Name,
+            Country = dto.Country,
+            Description = dto.Description
+        };
+
         var updatedDestination = await _destinationService.UpdateAsync(id, destination);
-        return Ok(updatedDestination);
+        var response = new DestinationResponseDTO
+        {
+            Id = updatedDestination.Id,
+            Name = updatedDestination.Name,
+            Country = updatedDestination.Country,
+            Description = updatedDestination.Description,
+            TripCount = updatedDestination.Trips?.Count ?? 0
+        };
+        return Ok(response);
     }
 
     [HttpDelete("{id}")]
@@ -53,24 +102,48 @@ public class DestinationController : ControllerBase
     }
 
     [HttpGet("country/{country}")]
-    public async Task<ActionResult<IEnumerable<Destination>>> GetByCountry(string country)
+    public async Task<ActionResult<IEnumerable<DestinationResponseDTO>>> GetByCountry(string country)
     {
         var destinations = await _destinationService.GetDestinationsByCountryAsync(country);
-        return Ok(destinations);
+        var response = destinations.Select(d => new DestinationResponseDTO
+        {
+            Id = d.Id,
+            Name = d.Name,
+            Country = d.Country,
+            Description = d.Description,
+            TripCount = d.Trips?.Count ?? 0
+        });
+        return Ok(response);
     }
 
     [HttpGet("popular")]
-    public async Task<ActionResult<IEnumerable<Destination>>> GetPopular([FromQuery] int count = 10)
+    public async Task<ActionResult<IEnumerable<DestinationResponseDTO>>> GetPopular([FromQuery] int count = 10)
     {
         var destinations = await _destinationService.GetPopularDestinationsAsync(count);
-        return Ok(destinations);
+        var response = destinations.Select(d => new DestinationResponseDTO
+        {
+            Id = d.Id,
+            Name = d.Name,
+            Country = d.Country,
+            Description = d.Description,
+            TripCount = d.Trips?.Count ?? 0
+        });
+        return Ok(response);
     }
 
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<Destination>>> Search([FromQuery] string term)
+    public async Task<ActionResult<IEnumerable<DestinationResponseDTO>>> Search([FromQuery] string term)
     {
         var destinations = await _destinationService.SearchDestinationsAsync(term);
-        return Ok(destinations);
+        var response = destinations.Select(d => new DestinationResponseDTO
+        {
+            Id = d.Id,
+            Name = d.Name,
+            Country = d.Country,
+            Description = d.Description,
+            TripCount = d.Trips?.Count ?? 0
+        });
+        return Ok(response);
     }
 
     [HttpGet("countries")]
@@ -81,17 +154,33 @@ public class DestinationController : ControllerBase
     }
 
     [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<Destination>>> GetActive()
+    public async Task<ActionResult<IEnumerable<DestinationResponseDTO>>> GetActive()
     {
         var destinations = await _destinationService.GetDestinationsWithActiveTripsAsync();
-        return Ok(destinations);
+        var response = destinations.Select(d => new DestinationResponseDTO
+        {
+            Id = d.Id,
+            Name = d.Name,
+            Country = d.Country,
+            Description = d.Description,
+            TripCount = d.Trips?.Count ?? 0
+        });
+        return Ok(response);
     }
 
     [HttpGet("sorted")]
-    public async Task<ActionResult<IEnumerable<Destination>>> GetSorted([FromQuery] bool ascending = true)
+    public async Task<ActionResult<IEnumerable<DestinationResponseDTO>>> GetSorted([FromQuery] bool ascending = true)
     {
         var destinations = await _destinationService.GetDestinationsSortedByTripCountAsync(ascending);
-        return Ok(destinations);
+        var response = destinations.Select(d => new DestinationResponseDTO
+        {
+            Id = d.Id,
+            Name = d.Name,
+            Country = d.Country,
+            Description = d.Description,
+            TripCount = d.Trips?.Count ?? 0
+        });
+        return Ok(response);
     }
 
     [HttpGet("statistics")]

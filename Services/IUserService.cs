@@ -14,4 +14,5 @@ public interface IUserService : IService<User>
     Task<bool> ValidateUserCredentialsAsync(string email, string password);
     Task<IEnumerable<Trip>> GetUserUpcomingTripsAsync(int userId);
     Task<IEnumerable<Trip>> GetUserPastTripsAsync(int userId);
+    Task<IEnumerable<User>> GetSortedUsersAsync(string sortBy);
 } 

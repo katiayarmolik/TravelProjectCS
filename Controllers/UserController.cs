@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TravelPlanner.DTOs;
 using TravelPlanner.Entities;
 using TravelPlanner.Services;
 
@@ -16,33 +17,88 @@ public class UserController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<User>>> GetAll()
+    public async Task<ActionResult<IEnumerable<UserResponseDTO>>> GetAll()
     {
         var users = await _userService.GetAllAsync();
-        return Ok(users);
+        var response = users.Select(u => new UserResponseDTO
+        {
+            Id = u.Id,
+            Username = u.Username,
+            Email = u.Email,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            TripCount = u.Trips.Count
+        });
+        return Ok(response);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<User>> GetById(int id)
+    public async Task<ActionResult<UserResponseDTO>> GetById(int id)
     {
         var user = await _userService.GetByIdAsync(id);
         if (user == null)
             return NotFound();
-        return Ok(user);
+
+        var response = new UserResponseDTO
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            TripCount = user.Trips.Count
+        };
+        return Ok(response);
     }
 
     [HttpPost]
-    public async Task<ActionResult<User>> Create(User user)
+    public async Task<ActionResult<UserResponseDTO>> Create(CreateUserDTO dto)
     {
+        var user = new User
+        {
+            Username = dto.Username,
+            Email = dto.Email,
+            PasswordHash = dto.Password, // Note: In a real application, you should hash the password
+            FirstName = dto.FirstName,
+            LastName = dto.LastName
+        };
+
         var createdUser = await _userService.CreateAsync(user);
-        return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
+        var response = new UserResponseDTO
+        {
+            Id = createdUser.Id,
+            Username = createdUser.Username,
+            Email = createdUser.Email,
+            FirstName = createdUser.FirstName,
+            LastName = createdUser.LastName,
+            TripCount = createdUser.Trips.Count
+        };
+        return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<User>> Update(int id, User user)
+    public async Task<ActionResult<UserResponseDTO>> Update(int id, UpdateUserDTO dto)
     {
+        var user = new User
+        {
+            Id = id,
+            Username = dto.Username,
+            Email = dto.Email,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName
+        };
+
         var updatedUser = await _userService.UpdateAsync(id, user);
-        return Ok(updatedUser);
+        var response = new UserResponseDTO
+        {
+            Id = updatedUser.Id,
+            Username = updatedUser.Username,
+            Email = updatedUser.Email,
+            FirstName = updatedUser.FirstName,
+            LastName = updatedUser.LastName,
+            TripCount = updatedUser.Trips.Count
+        };
+        return Ok(response);
     }
 
     [HttpDelete("{id}")]
@@ -52,22 +108,39 @@ public class UserController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("active")]
+    public async Task<ActionResult<IEnumerable<UserResponseDTO>>> GetActiveUsers()
+    {
+        var users = await _userService.GetActiveUsersAsync();
+        var response = users.Select(u => new UserResponseDTO
+        {
+            Id = u.Id,
+            Username = u.Username,
+            Email = u.Email,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            TripCount = u.Trips.Count
+        });
+        return Ok(response);
+    }
+
     [HttpGet("email/{email}")]
-    public async Task<ActionResult<User>> GetByEmail(string email)
+    public async Task<ActionResult<UserResponseDTO>> GetByEmail(string email)
     {
         var user = await _userService.GetByEmailAsync(email);
         if (user == null)
             return NotFound();
-        return Ok(user);
-    }
 
-    [HttpGet("username/{username}")]
-    public async Task<ActionResult<User>> GetByUsername(string username)
-    {
-        var user = await _userService.GetByUsernameAsync(username);
-        if (user == null)
-            return NotFound();
-        return Ok(user);
+        var response = new UserResponseDTO
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            TripCount = user.Trips.Count
+        };
+        return Ok(response);
     }
 
     [HttpGet("{id}/trips")]
@@ -77,18 +150,29 @@ public class UserController : ControllerBase
         return Ok(trips);
     }
 
-    [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<User>>> GetActive()
+    [HttpGet("sorted")]
+    public async Task<ActionResult<IEnumerable<UserResponseDTO>>> GetSortedUsers([FromQuery] string sortBy)
     {
-        var users = await _userService.GetActiveUsersAsync();
-        return Ok(users);
+        var users = await _userService.GetSortedUsersAsync(sortBy);
+        var response = users.Select(u => new UserResponseDTO
+        {
+            Id = u.Id,
+            Username = u.Username,
+            Email = u.Email,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            TripCount = u.Trips.Count
+        });
+        return Ok(response);
     }
 
-    [HttpGet("sorted")]
-    public async Task<ActionResult<IEnumerable<User>>> GetSorted([FromQuery] int count = 10)
+    [HttpGet("username/{username}")]
+    public async Task<ActionResult<User>> GetByUsername(string username)
     {
-        var users = await _userService.GetUsersByTripCountAsync(count);
-        return Ok(users);
+        var user = await _userService.GetByUsernameAsync(username);
+        if (user == null)
+            return NotFound();
+        return Ok(user);
     }
 
     [HttpGet("statistics")]

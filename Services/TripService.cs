@@ -33,7 +33,13 @@ public class TripService : BaseService<Trip>, ITripService
     {
         _context.Trips.Add(trip);
         await _context.SaveChangesAsync();
-        return trip;
+        
+        // Reload the trip with navigation properties
+        return await _context.Trips
+            .Include(t => t.Destination)
+            .Include(t => t.DepartureLocation)
+            .Include(t => t.User)
+            .FirstOrDefaultAsync(t => t.Id == trip.Id) ?? trip;
     }
 
     public override async Task<Trip> UpdateAsync(int id, Trip trip)
